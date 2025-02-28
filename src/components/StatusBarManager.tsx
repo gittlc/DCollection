@@ -1,28 +1,34 @@
-import { useEffect } from 'react';
-import { StatusBar } from '@capacitor/status-bar';
+import { useEffect, useRef } from "react";
+import { StatusBar, Style } from "@capacitor/status-bar"; // Import Style
 
 const StatusBarManager = () => {
-  useEffect(() => {
-    StatusBar.setStyle({ style: 'DEFAULT' });
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    let timeout;
+  useEffect(() => {
+    StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
 
     const handleTouchStart = () => {
-      clearTimeout(timeout);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
 
     const handleTouchEnd = () => {
-      timeout = setTimeout(() => {
-        StatusBar.hide();
+      timeoutRef.current = setTimeout(() => {
+        StatusBar.hide().catch(() => {});
       }, 3000);
     };
 
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
 
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
