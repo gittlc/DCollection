@@ -1,39 +1,115 @@
-import {
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonMenuButton,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-} from "@ionic/react";
-import { useParams } from "react-router";
+import { IonContent, IonPage } from "@ionic/react";
+import { useEffect, useState, useRef } from "react";
 import StatusBarManager from "../components/StatusBarManager";
+import Menu from "../components/Menu";
+import { listObjects, getObject } from "../s3client";
+
 import "./Page.css";
 
 const Page: React.FC = () => {
-  const { name } = useParams<{ name: string }>();
+  const [files, setFiles] = useState<any[]>([]);
+  const [selectedFilename, setSelectedFilename] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState();
+  const [touchStartY, setTouchStartY] = useState(0);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    listObjects().then((files) => {
+      setFiles(files);
+      setSelectedFilename(files[0].Key);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (selectedFilename) {
+      getObject(selectedFilename).then((data: any) => {
+        setSelectedFile(data);
+      });
+    }
+  }, [selectedFilename]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play();
+    }
+  }, [selectedFile]);
+
+  const playNext = () => {
+    const currentIndex = files.findIndex(
+      (file: { Key: string }) => file.Key === selectedFilename
+    );
+    const nextIndex = (currentIndex + 1) % files.length;
+    const nextFile = files[nextIndex];
+    setSelectedFilename(nextFile?.Key);
+  };
+
+  const playPrevious = () => {
+    const currentIndex = files.findIndex(
+      (file: { Key: string }) => file.Key === selectedFilename
+    );
+    const previousIndex = (currentIndex - 1 + files.length) % files.length;
+    const previousFile = files[previousIndex];
+    setSelectedFilename(previousFile?.Key);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaY) > 50) {
+      if (deltaY > 0) {
+        playPrevious();
+      } else {
+        playNext();
+      }
+    }
+  };
 
   return (
-    <IonPage>
-      <StatusBarManager />
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonMenuButton />
-          </IonButtons>
-          <IonTitle>{name}</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+    <>
+      <Menu
+        files={files}
+        selectedFilename={selectedFilename}
+        setSelectedFilename={setSelectedFilename}
+      />
+      <IonPage id="main">
+        <StatusBarManager />
 
-      <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">{name}</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-      </IonContent>
-    </IonPage>
+        <IonContent
+          fullscreen
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <video
+              ref={videoRef}
+              style={{ maxHeight: "100%", maxWidth: "100%" }}
+              controls
+              autoPlay
+              onEnded={playNext}
+              onError={playNext}
+            >
+              {selectedFile && <source src={selectedFile} />}
+            </video>
+          </div>
+        </IonContent>
+      </IonPage>
+    </>
   );
 };
 
