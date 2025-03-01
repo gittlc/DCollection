@@ -32,7 +32,6 @@ const Page: React.FC = () => {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
-      videoRef.current.play();
     }
   }, [selectedFile]);
 
@@ -104,8 +103,8 @@ const Page: React.FC = () => {
                 maxWidth: "100%",
                 backgroundColor: "black",
               }}
-              controls
               autoPlay
+              controls
               onEnded={playNext}
               onError={playNext}
             >
