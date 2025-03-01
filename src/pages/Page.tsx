@@ -94,11 +94,16 @@ const Page: React.FC = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              backgroundColor: "black",
             }}
           >
             <video
               ref={videoRef}
-              style={{ maxHeight: "100%", maxWidth: "100%" }}
+              style={{
+                maxHeight: "100%",
+                maxWidth: "100%",
+                backgroundColor: "black",
+              }}
               controls
               autoPlay
               onEnded={playNext}
