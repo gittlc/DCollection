@@ -1,31 +1,40 @@
 import { useEffect, useRef } from "react";
-import { StatusBar, Style } from "@capacitor/status-bar"; // Import Style
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 const StatusBarManager = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+    if (Capacitor.isPluginAvailable("StatusBar")) {
+      StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+    }
 
-    const handleTouchStart = () => {
+    const handleStart = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
     };
 
-    const handleTouchEnd = () => {
+    const handleEnd = () => {
       timeoutRef.current = setTimeout(() => {
-        StatusBar.hide().catch(() => {});
+        if (Capacitor.isPluginAvailable("StatusBar")) {
+          StatusBar.hide().catch(() => {});
+        }
       }, 3000);
     };
 
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchstart", handleStart);
+    window.addEventListener("touchend", handleEnd);
+    window.addEventListener("mousedown", handleStart);
+    window.addEventListener("mouseup", handleEnd);
 
     return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchstart", handleStart);
+      window.removeEventListener("touchend", handleEnd);
+      window.removeEventListener("mousedown", handleStart);
+      window.removeEventListener("mouseup", handleEnd);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
