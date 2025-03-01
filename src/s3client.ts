@@ -9,10 +9,10 @@ import Cookies from "js-cookie";
 const bucket = "bosuutap";
 const client = new S3Client({
   region: "us-east-1",
-  endpoint: "https://q0w7.sg.idrivee2-43.com",
+  endpoint: import.meta.env.VITE_ENDPOINT,
   credentials: {
-    accessKeyId: "8OBl9ve6KBiLAdnIReel",
-    secretAccessKey: "RwoILuzZVKcRhtFfvXFSZqf6vHkPeF5eeWYvviy5",
+    accessKeyId: import.meta.env.VITE_ACCESS_KEY,
+    secretAccessKey: import.meta.env.VITE_SECRET_KEY,
   },
 });
 
